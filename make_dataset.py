@@ -1,12 +1,37 @@
-import pyqtgraph as pg
+import os
+import zipfile
+import urllib
 import fluidsynth
 import numpy as np
 from scipy.ndimage import gaussian_filter
 
 
+sf_sources = {
+    'JR_String2.sf2': 'http://johannes.roussel.free.fr/free_soundfonts.zip',
+}
+
+def get_soundfont(name):
+    assert name in sf_sources
+    path = os.path.join(os.path.dirname(__file__), 'sf')
+    if not os.path.isdir(path):
+        os.mkdir(path)
+    sf_file = os.path.join(path, name)
+    if not os.path.exists(sf_file):
+        fname, headers = urllib.urlretrieve(sf_sources[name])
+        if fname.endswith('.zip'):
+            zip_ref = zipfile.ZipFile(fname, 'r')
+            zip_ref.extractall(path)
+            zip_ref.close()
+            os.remove(fname)
+        else:
+            os.rename(fname, os.path.join(path, fname))
+    return sf_file
+        
+
 def synth(notes, levels):
     fs = fluidsynth.Synth()
-    sfid = fs.sfload("sf/JR_String2.sf2")
+    sf_file = get_soundfont('JR_String2.sf2')
+    sfid = fs.sfload(sf_file)
     fs.program_select(0, sfid, 0, 0)
     for note, level in zip(notes, levels):
         fs.noteon(0, note, level)
@@ -27,7 +52,7 @@ def filter(sample):
 
 
 if __name__ == '__main__':
-    n = 10000
+    n = 1000
     labels = np.zeros((n, 15), dtype='ubyte')
     feature_size = len(filter(synth([], [])))
     features = np.zeros((n, feature_size), dtype='float32')
