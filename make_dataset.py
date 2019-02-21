@@ -46,7 +46,7 @@ def filter(sample):
 
     # smooth and downsample fft
     ds = 5
-    smooth = gaussian_filter(fft, ds)
+    smooth = gaussian_filter(fft, ds/3.0)
     n_ds = (len(fft) // ds)
     return smooth[:n_ds*ds].reshape(n_ds, ds).mean(axis=1)
 
@@ -58,12 +58,14 @@ if __name__ == '__main__':
     features = np.zeros((n, feature_size), dtype='float32')
 
     for i in range(n):
-        note = np.random.randint(0, 13)
-        chord_type = np.random.randint(0, 3)  # major, minor, 7
+        note = np.random.randint(0, 12)
+        # chord_type = np.random.randint(0, 3)  # major, minor, 7
+        chord_type = 0
         labels[i, note] = 1
         labels[i, 12+chord_type] = 1
 
-        octave = np.random.randint(2, 6)
+        # octave = np.random.randint(2, 6)
+        octave = 3
         tonic = note + octave * 12
         if chord_type == 0:
             notes = [tonic, tonic + 4, tonic + 7]
@@ -80,4 +82,3 @@ if __name__ == '__main__':
 
     np.save('labels.npy', labels)
     np.save('features.npy', features)
-
